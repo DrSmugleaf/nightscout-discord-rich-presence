@@ -25,7 +25,7 @@ export interface INightscoutData {
   _id: string
   device: string
   dateString: string
-  sgv: number
+  glucose: number
   delta: number
   direction: string
   type: string
@@ -39,7 +39,7 @@ export interface INightscoutData {
 export const fetchInfo = async (baseURL: string) => {
   try {
     const resp = await axios.get<INightscoutData[]>(
-      '/api/v1/entries.json?count=1',
+      '/api/v1/treatments',
       { baseURL }
     )
 
@@ -60,24 +60,20 @@ export const directionArrow = (direction: string) => {
   switch (dir) {
     case 'NONE':
       return ARROW_NONE
-    case 'DOUBLEUP':
-      return ARROW_DOUBLE_UP
-    case 'SINGLEUP':
-      return ARROW_SINGLE_UP
-    case 'FORTYFIVEUP':
-      return ARROW_FORTY_FIVE_UP
-    case 'FLAT':
-      return ARROW_FLAT
-    case 'FORTYFIVEDOWN':
-      return ARROW_FORTY_FIVE_DOWN
-    case 'SINGLEDOWN':
-      return ARROW_SINGLE_DOWN
     case 'DOUBLEDOWN':
       return ARROW_DOUBLE_DOWN
-    case 'NOT COMPUTABLE':
-      return ARROW_NOT_COMPUTABLE
-    case 'RATE OUT OF RANGE':
-      return ARROW_RATE_OUT_OF_RANGE
+    case 'DOWN':
+      return ARROW_SINGLE_DOWN
+    case 'HALFDOWN':
+      return ARROW_FORTY_FIVE_DOWN
+    case 'FLAT':
+      return ARROW_FLAT
+    case 'HALFUP':
+      return ARROW_FORTY_FIVE_UP
+    case 'UP':
+      return ARROW_SINGLE_UP
+    case 'DOUBLEUP':
+      return ARROW_DOUBLE_UP
     default:
       return ''
   }
@@ -87,8 +83,9 @@ export const humanUnits = (unit: IConfig['units']) =>
   unit === 'mgdl' ? UNIT_MGDL : UNIT_MMOL
 
 export interface IParsedData {
-  value: string
   direction: string
+  mgdl: string
+  mmol: string
 
   alert?: IAlert
 }
@@ -105,12 +102,14 @@ export const parseData = (data: INightscoutData, config: IConfig) => {
   const lowerBound = isMmol ? mgdlToMmol(config.lowValue) : config.lowValue
   const upperBound = isMmol ? mgdlToMmol(config.highValue) : config.highValue
 
-  const rawUnits = isMmol ? mgdlToMmol(data.sgv) : data.sgv
+  const rawUnits = isMmol ? mgdlToMmol(data.glucose) : data.glucose
   const units = rawUnits.toFixed(0)
+  const mmolUnits = (isMmol ? rawUnits : mgdlToMmol(units)).toFixed(1)
 
   const parsed: IParsedData = {
-    direction: directionArrow(data.direction),
-    value: isMmol ? `${units} ${UNIT_MMOL}` : `${units} ${UNIT_MGDL}`,
+    direction: directionArrow(data.notes),
+    mgdl: units,
+    mmol: mmolUnits
   }
 
   if (rawUnits <= lowerBound) {

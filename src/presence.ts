@@ -4,6 +4,8 @@ import {
   RPC_CLIENT_ID,
   RPC_IMG_NIGHTSCOUT_LOGO,
   RPC_STR_DETAIL,
+  UNIT_MGDL,
+  UNIT_MMOL
 } from './constants'
 import { IParsedData } from './nightscout'
 
@@ -15,10 +17,10 @@ export const rpcReady = new Promise(resolve => {
 })
 
 export const setActivity = (data: IParsedData, config: IConfig) => {
-  const state = `${data.value} (${data.direction})`
+  const state = `${data.mgdl} ${UNIT_MGDL} | ${data.mmol} ${UNIT_MMOL}`
 
   rpc.setActivity({
-    details: config.displayNightscoutSite ? config.siteUrl : RPC_STR_DETAIL,
+    details: config.displayNightscoutSite ? config.siteUrl : RPC_STR_DETAIL + ` (${data.direction})`,
     largeImageKey: RPC_IMG_NIGHTSCOUT_LOGO,
     largeImageText: state,
     smallImageKey: (data.alert && data.alert.image) || undefined,
